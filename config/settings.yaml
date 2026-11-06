@@ -1,0 +1,43 @@
+# ==============================================================
+# CẤU HÌNH TỰ ĐỘNG ĐĂNG BÀI FACEBOOK GROUP (TỐC ĐỘ NHANH & CHỐNG BAN TỐI ĐA)
+# ==============================================================
+
+# Thư mục bài đăng muốn sử dụng (nằm trong thư mục posts/)
+active_post_folder: "posts/sample_post"
+
+# Danh sách nhóm cần đăng
+groups_file: "config/groups.txt"
+
+# Mục tiêu: Đăng tối đa bao nhiêu nhóm trong 1 lần chạy
+max_posts_per_run: 30
+
+# ĐÃ RÚT NGẮN: Thời gian nghỉ giữa 2 nhóm liên tiếp (giây)
+# Tối ưu 45s - 85s (vừa nhanh vừa đủ nhịp thở tự nhiên cho tài khoản)
+delay_between_groups:
+  min_seconds: 45      # Tối thiểu 45 giây
+  max_seconds: 85      # Tối đa 85 giây (~1.4 phút)
+
+# ĐÃ RÚT NGẮN: Cơ chế nghỉ giải lao ngắn & lướt bảng tin
+# Cứ đăng xong 6 nhóm -> Nghỉ 3 - 5 phút (trong lúc nghỉ tự lướt Newsfeed như người thật)
+break_after_posts:
+  count: 6                         # Cứ sau 6 nhóm
+  duration_min_seconds: 180        # Nghỉ 3 phút (180 giây)
+  duration_max_seconds: 300        # Nghỉ 5 phút (300 giây)
+  browse_newsfeed_during_break: true # Tự về trang chủ lướt dạo trong lúc nghỉ
+
+# Cấu hình chống khóa & chống trùng lặp nâng cao (Anti-Ban Pro)
+anti_duplicate:
+  use_spintax: false               # Giữ nguyên văn 100% câu chữ trong content.txt
+  inject_zero_width: false         # Không chèn ký tự ẩn làm gãy chữ hoặc báo lỗi chính tả
+  mutate_image_hash: true          # Đổi pHash ảnh (Micro-crop + Noise + Xóa EXIF + Tên file như điện thoại)
+  append_random_signature: false   # Không thêm mã rác cuối bài
+  simulate_typo_and_fix: false     # Gõ chính xác 100% từng chữ, không gõ nhầm
+  random_group_engagement: true    # Lướt xem nhóm & thỉnh thoảng thả Like dạo trước khi đăng
+
+# Thời gian tối thiểu giữa 2 lần đăng vào cùng 1 nhóm (giờ)
+repost_cooldown_hours: 20
+
+# Cấu hình trình duyệt
+browser:
+  headless: false                  # Để false để theo dõi trực quan
+  user_data_dir: "chrome_profile"  # Thư mục lưu nick duy nhất của bạn

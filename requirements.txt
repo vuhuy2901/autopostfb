@@ -1,0 +1,5 @@
+# Thư viện phụ thuộc cho Hệ thống Tự Động Đăng Bài Facebook Group
+selenium>=4.18.0
+Pillow>=10.0.0
+PyYAML>=6.0.1
+python-dotenv>=1.0.0

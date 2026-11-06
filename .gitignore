@@ -1,0 +1,43 @@
+# ==============================================================
+# BẢO MẬT & DỮ LIỆU TÀI KHOẢN (TUYỆT ĐỐI KHÔNG COMMIT LÊN GIT)
+# ==============================================================
+.env
+.env.local
+.env.*.local
+
+# Profile trình duyệt lưu trữ cookie, mật khẩu, session Facebook
+chrome_profile/
+chrome_debug/
+profiles/
+
+# Thư mục ảnh tạm thời tạo ra trong quá trình đổi pHash chống trùng lặp
+.temp_mutated_images/
+
+# Nhật ký và lịch sử chạy
+logs/
+*.log
+data/history.json
+
+# Ảnh chụp màn hình debug
+*.png
+debug_*.png
+dialog_inspect.png
+
+# Python cache & virtual environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
