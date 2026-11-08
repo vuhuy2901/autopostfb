@@ -135,7 +135,20 @@ break_after_posts:
 
 ## 🚀 Hướng Dẫn Vận Hành
 
-### Cách 1: Chạy tự động hoàn toàn (Khuyên dùng)
+### Cách 1: Giao Diện Web Trực Quan (Khuyên dùng)
+Chỉ cần chạy lệnh:
+```bash
+python web_app.py
+```
+Hoặc trên Windows, click đúp vào file **`MO_GIAO_DIEN_WEB.bat`**.
+- Trình duyệt sẽ tự động mở bảng điều khiển tại địa chỉ: `http://127.0.0.1:5000`
+- Trên giao diện Web, bạn có thể:
+  - Bấm **🚀 BẮT ĐẦU CHẠY AUTO** hoặc **🛑 DỪNG CHIẾN DỊCH** bất kỳ lúc nào.
+  - Xem nhật ký hoạt động thời gian thực (Live Console), tiến độ phần trăm và thống kê Thành công / Thất bại.
+  - Chỉnh sửa nội dung bài viết, tải lên hoặc xóa ảnh đính kèm.
+  - Quản lý danh sách link nhóm Facebook và cấu hình thời gian nghỉ, tài khoản `.env` ngay trên Web.
+
+### Cách 2: Chạy tự động 1-Click bằng Script
 Chỉ cần chạy lệnh:
 ```bash
 python auto_pilot.py
@@ -147,8 +160,8 @@ Hệ thống sẽ:
 2. Tự động đăng nhập tài khoản Facebook (hoặc sử dụng phiên đăng nhập đã có sẵn trong `chrome_profile`).
 3. Kiểm tra danh sách nhóm, tự động đăng lần lượt từng nhóm, đính kèm ảnh và ghi nhật ký.
 
-### Cách 2: Sử dụng giao diện Menu dòng lệnh
-Nếu bạn muốn xem menu tương tác trực quan:
+### Cách 3: Sử dụng giao diện Menu dòng lệnh
+Nếu bạn muốn xem menu tương tác trực quan trên Terminal:
 ```bash
 python run.py
 ```

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoPost FB Pro — Hệ Thống Tự Động Đăng Nhóm Facebook</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navbar -->
+  <header class="border-b border-slate-800/80 bg-slate-900/90 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 font-extrabold text-white text-xl">
+          f
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            AutoPost FB Pro
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-medium">Anti-Ban v2.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Hệ thống điều khiển tự động đăng bài Facebook Group trực quan</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="openChromeBrowser()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition flex items-center gap-2">
+          <span>🌐</span> Mở Chrome (Cổng 9222)
+        </button>
+        <button id="btnStart" onclick="startCampaign()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-600/25 transition flex items-center gap-2">
+          <span>🚀</span> BẮT ĐẦU CHẠY AUTO
+        </button>
+        <button id="btnStop" onclick="stopCampaign()" class="hidden px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-semibold text-xs shadow-lg shadow-rose-600/25 transition flex items-center gap-2">
+          <span>🛑</span> DỪNG CHIẾN DỊCH
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all duration-300"></div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 space-y-6">
+
+    <!-- Status Banner & KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Trạng thái hệ thống</p>
+          <p id="statStatusBadge" class="text-base font-bold text-emerald-400 mt-1 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Sẵn sàng
+          </p>
+          <p id="statProgressSub" class="text-xs text-slate-400 mt-1 truncate max-w-[210px]">Chưa có tác vụ đang chạy</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">⚡</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Tổng số nhóm đã lưu</p>
+          <p id="statGroupsCount" class="text-2xl font-extrabold text-white mt-1">0</p>
+          <p class="text-xs text-slate-400 mt-1">Trong danh sách config/groups.txt</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xl">📋</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Tổng lượt đăng Thành Công</p>
+          <p id="statSuccessTotal" class="text-2xl font-extrabold text-emerald-400 mt-1">0</p>
+          <p id="statRunSuccess" class="text-xs text-slate-400 mt-1">Đợt chạy này: 0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-xl">✅</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Lượt báo Lỗi / Bỏ qua</p>
+          <p id="statFailedTotal" class="text-2xl font-extrabold text-rose-400 mt-1">0</p>
+          <p id="statRunFailed" class="text-xs text-slate-400 mt-1">Đợt chạy này: 0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-xl">⚠️</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+      <button onclick="switchTab('tab-dashboard')" id="btn-tab-dashboard" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow">
+        📊 Bảng Điều Khiển & Nhật Ký Trực Tiếp
+      </button>
+      <button onclick="switchTab('tab-post')" id="btn-tab-post" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-700">
+        ✍️ Nội Dung & Hình Ảnh Bài Viết
+      </button>
+      <button onclick="switchTab('tab-groups')" id="btn-tab-groups" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-700">
+        👥 Quản Lý Danh Sách Nhóm (<span id="tabGroupsBadge">0</span>)
+      </button>
+      <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-700">
+        ⚙️ Cấu Hình Hệ Thống & Tài Khoản
+      </button>
+    </div>
+
+    <!-- TAB 1: DASHBOARD & LIVE LOGS -->
+    <section id="tab-dashboard" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Live Console Log -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-5 flex flex-col h-[460px]">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>🖥️</span> Nhật Ký Hoạt Động Thời Gian Thực (Live Console)
+            </h2>
+            <span id="liveStepCounter" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-blue-400 font-semibold">Tiến độ: 0/0</span>
+          </div>
+          <!-- Progress Bar -->
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-3">
+            <div id="liveProgressBar" class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <div id="liveLogContainer" class="flex-1 bg-slate-950/90 border border-slate-800/90 rounded-xl p-3.5 overflow-y-auto custom-scroll font-mono text-xs space-y-1.5">
+            <div class="text-slate-500">Hệ thống đã sẵn sàng. Bấm "BẮT ĐẦU CHẠY AUTO" để khởi động chiến dịch...</div>
+          </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-5 flex flex-col h-[460px]">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>🕒</span> Lịch Sử Đăng Nhóm Gần Đây
+            </h2>
+            <button onclick="clearHistory()" class="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-medium transition">
+              🧹 Xóa lịch sử trùng
+            </button>
+          </div>
+          <div id="historyListContainer" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: POST CONTENT & IMAGES -->
+    <section id="tab-post" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Post Text Editor -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-white">📝 Nội Dung Bài Viết Chuẩn (posts/sample_post/content.txt)</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Nội dung này sẽ được gõ chính xác 100% vào hộp thoại Tạo bài viết của từng nhóm</p>
+            </div>
+            <button onclick="savePostContent()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/25 transition">
+              💾 Lưu Nội Dung
+            </button>
+          </div>
+          <textarea id="postContentTextarea" rows="10" class="w-full rounded-xl bg-slate-950/90 border border-slate-800 focus:border-blue-500 focus:outline-none p-4 text-sm text-slate-100 leading-relaxed" placeholder="Nhập nội dung bài viết cần đăng..."></textarea>
+          <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+            💡 <strong>Mẹo:</strong> Bạn có thể giữ nguyên văn bản cố định hoặc sử dụng cú pháp Spintax <code>{Từ 1|Từ 2}</code> nếu bật chế độ trộn Spintax trong phần Cấu hình.
+          </div>
+        </div>
+
+        <!-- Post Images Manager -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-bold text-white">🖼️ Hình Ảnh Đính Kèm</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Tự động lách pHash & xóa EXIF trước khi tải lên nhóm</p>
+            </div>
+            <label class="cursor-pointer px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+              ➕ Thêm Ảnh Mới
+              <input type="file" id="imageUploadInput" multiple accept="image/*" class="hidden" onchange="uploadImages()" />
+            </label>
+          </div>
+          <div id="imagesGrid" class="grid grid-cols-2 gap-3 max-h-[340px] overflow-y-auto custom-scroll p-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: GROUPS MANAGER -->
+    <section id="tab-groups" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold text-white">👥 Danh Sách Đường Dẫn Nhóm Facebook (config/groups.txt)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Mỗi dòng 1 đường link nhóm Facebook. Hệ thống sẽ tự động xáo trộn ngẫu nhiên và lọc bỏ nhóm đã đăng trong 20 giờ qua.</p>
+          </div>
+          <button onclick="saveGroupsList()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/25 transition">
+            💾 Lưu Danh Sách Nhóm
+          </button>
+        </div>
+        <textarea id="groupsTextarea" rows="16" class="w-full rounded-xl bg-slate-950/90 border border-slate-800 focus:border-blue-500 focus:outline-none p-4 font-mono text-xs text-slate-200 leading-relaxed custom-scroll" placeholder="https://www.facebook.com/groups/..."></textarea>
+      </div>
+    </section>
+
+    <!-- TAB 4: SETTINGS & ACCOUNT -->
+    <section id="tab-settings" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Timing & Limits -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-5 space-y-4">
+          <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-2.5">⏱️ Cấu Hình Tốc Độ & Giãn Cách An Toàn</h2>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Số nhóm tối đa / 1 lần chạy</label>
+              <input type="number" id="cfgMaxPosts" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Chống đăng trùng nhóm trong (giờ)</label>
+              <input type="number" id="cfgCooldown" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Nghỉ tối thiểu giữa 2 nhóm (giây)</label>
+              <input type="number" id="cfgDelayMin" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Nghỉ tối đa giữa 2 nhóm (giây)</label>
+              <input type="number" id="cfgDelayMax" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Số nhóm đăng liên tiếp trước khi nghỉ dài</label>
+              <input type="number" id="cfgBreakCount" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Nghỉ dài Min (s)</label>
+                <input type="number" id="cfgBreakMin" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Nghỉ dài Max (s)</label>
+                <input type="number" id="cfgBreakMax" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2 text-sm text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account & Anti-Ban Flags -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-5 space-y-4">
+          <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-2.5">🔐 Tài Khoản Facebook (.env) & Chống Checkpoint</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Email / SĐT Facebook</label>
+              <input type="text" id="cfgFbEmail" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" placeholder="duyliv2212@gmail.com" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Mật khẩu Facebook</label>
+              <input type="password" id="cfgFbPassword" class="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2 text-sm text-white" placeholder="********" />
+            </div>
+          </div>
+
+          <div class="space-y-2.5 pt-2">
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgMutateImage" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Đổi pHash ảnh & xóa EXIF:</strong> Chống quét trùng lặp hình ảnh (Khuyên bật)</span>
+            </label>
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgRandomEngagement" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Tương tác nuôi Trust:</strong> Cuộn trang & thả Like ngẫu nhiên trước khi đăng</span>
+            </label>
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgUseSpintax" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Bật trộn Spintax <code>{A|B}</code>:</strong> (Tắt nếu muốn giữ cố định 100% câu chữ)</span>
+            </label>
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgInjectZeroWidth" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Chèn ký tự vô hình Zero-Width:</strong> (Tắt nếu muốn giữ nguyên văn bản thuần)</span>
+            </label>
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgAppendSignature" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Thêm mã chữ ký ngẫu nhiên cuối bài:</strong> (Tắt nếu không muốn thêm mã cuối bài)</span>
+            </label>
+            <label class="flex items-center gap-3 text-xs text-slate-200 cursor-pointer">
+              <input type="checkbox" id="cfgSimulateTypo" class="w-4 h-4 rounded accent-blue-600" />
+              <span><strong>Giả lập gõ nhầm & Backspace:</strong> (Tắt để gõ nhanh và chuẩn xác 100%)</span>
+            </label>
+          </div>
+
+          <div class="pt-3 flex justify-end">
+            <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/25 transition">
+              💾 Lưu Toàn Bộ Cấu Hình
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-2xl border text-xs font-semibold transition-all duration-300 ${
+        isError
+          ? 'bg-rose-950/95 border-rose-500/40 text-rose-200'
+          : 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200'
+      }`;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function switchTab(tabId) {
+      ['tab-dashboard', 'tab-post', 'tab-groups', 'tab-settings'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        const btn = document.getElementById('btn-' + id);
+        btn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 text-slate-300 hover:bg-slate-700';
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('btn-' + tabId);
+      activeBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow';
+    }
+
+    async function fetchState() {
+      try {
+        const res = await fetch('/api/state');
+        const data = await res.json();
+        const camp = data.campaign;
+
+        document.getElementById('statGroupsCount').textContent = data.groups_count;
+        document.getElementById('tabGroupsBadge').textContent = data.groups_count;
+        document.getElementById('statSuccessTotal').textContent = data.summary.success;
+        document.getElementById('statFailedTotal').textContent = data.summary.failed;
+        document.getElementById('statRunSuccess').textContent = `Đợt chạy này: ${camp.success_count}`;
+        document.getElementById('statRunFailed').textContent = `Đợt chạy này: ${camp.failed_count}`;
+        document.getElementById('statProgressSub').textContent = camp.status_text;
+
+        const badge = document.getElementById('statStatusBadge');
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+
+        if (camp.is_running) {
+          badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span> Đang chạy Auto...`;
+          badge.className = 'text-base font-bold text-amber-400 mt-1 flex items-center gap-2';
+          btnStart.classList.add('hidden');
+          btnStop.classList.remove('hidden');
+        } else {
+          badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Sẵn sàng`;
+          badge.className = 'text-base font-bold text-emerald-400 mt-1 flex items-center gap-2';
+          btnStart.classList.remove('hidden');
+          btnStop.classList.add('hidden');
+        }
+
+        // Progress bar
+        const pct = camp.total_targets > 0 ? Math.round((camp.current_index / camp.total_targets) * 100) : 0;
+        document.getElementById('liveProgressBar').style.width = `${pct}%`;
+        document.getElementById('liveStepCounter').textContent = `Tiến độ: ${camp.current_index}/${camp.total_targets} (${pct}%)`;
+
+        // Live logs
+        const logBox = document.getElementById('liveLogContainer');
+        if (camp.logs && camp.logs.length > 0) {
+          const isNearBottom = logBox.scrollHeight - logBox.scrollTop - logBox.clientHeight < 80;
+          logBox.innerHTML = camp.logs.map(l => {
+            let color = 'text-slate-300';
+            if (l.level === 'success') color = 'text-emerald-400 font-medium';
+            if (l.level === 'error') color = 'text-rose-400 font-medium';
+            if (l.level === 'warn') color = 'text-amber-300';
+            return `<div><span class="text-slate-500">[${l.time}]</span> <span class="${color}">${l.msg}</span></div>`;
+          }).join('');
+          if (isNearBottom) logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // History list
+        const histBox = document.getElementById('historyListContainer');
+        if (data.history && data.history.length > 0) {
+          histBox.innerHTML = data.history.map(h => {
+            const isOk = h.status === 'success';
+            return `
+              <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isOk ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}">
+                      ${isOk ? 'SUCCESS' : 'FAILED'}
+                    </span>
+                    <span class="text-[11px] text-slate-500">${(h.timestamp || '').replace('T', ' ').slice(0, 19)}</span>
+                  </div>
+                  <a href="${h.group_url}" target="_blank" class="text-xs text-blue-400 hover:underline truncate block mt-1">${h.group_url}</a>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${h.message || ''}</p>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          histBox.innerHTML = `<div class="text-xs text-slate-500 text-center py-10">Chưa có lịch sử đăng bài.</div>`;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadPostAndImages() {
+      const res = await fetch('/api/post-data');
+      const data = await res.json();
+      document.getElementById('postContentTextarea').value = data.content || '';
+      renderImages(data.images || []);
+    }
+
+    function renderImages(images) {
+      const grid = document.getElementById('imagesGrid');
+      if (!images.length) {
+        grid.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-slate-500">Chưa có ảnh nào trong thư mục.</div>`;
+        return;
+      }
+      grid.innerHTML = images.map(img => `
+        <div class="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+          <img src="/api/images/${encodeURIComponent(img)}" class="w-full h-36 object-cover" />
+          <div class="p-2 flex items-center justify-between bg-slate-900/95">
+            <span class="text-[11px] text-slate-300 truncate max-w-[130px]" title="${img}">${img}</span>
+            <button onclick="deleteImage('${img}')" class="text-xs text-rose-400 hover:text-rose-300 font-semibold px-2 py-0.5 rounded bg-rose-500/10">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function savePostContent() {
+      const content = document.getElementById('postContentTextarea').value;
+      const res = await fetch('/api/post-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      const data = await res.json();
+      showToast(data.message || 'Đã lưu nội dung!');
+    }
+
+    async function uploadImages() {
+      const input = document.getElementById('imageUploadInput');
+      if (!input.files.length) return;
+      const formData = new FormData();
+      for (const file of input.files) {
+        formData.append('files', file);
+      }
+      const res = await fetch('/api/images/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      showToast(data.message || 'Đã tải ảnh lên!', !data.ok);
+      input.value = '';
+      loadPostAndImages();
+    }
+
+    async function deleteImage(filename) {
+      const res = await fetch('/api/images/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      });
+      const data = await res.json();
+      showToast(data.message, !data.ok);
+      loadPostAndImages();
+    }
+
+    async function loadGroupsList() {
+      const res = await fetch('/api/groups');
+      const data = await res.json();
+      document.getElementById('groupsTextarea').value = data.groups_text || '';
+    }
+
+    async function saveGroupsList() {
+      const groups_text = document.getElementById('groupsTextarea').value;
+      const res = await fetch('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groups_text })
+      });
+      const data = await res.json();
+      showToast(data.message);
+      fetchState();
+    }
+
+    async function loadSettingsForm() {
+      const res = await fetch('/api/settings');
+      const s = await res.json();
+      document.getElementById('cfgMaxPosts').value = s.max_posts_per_run;
+      document.getElementById('cfgCooldown').value = s.repost_cooldown_hours;
+      document.getElementById('cfgDelayMin').value = s.delay_min;
+      document.getElementById('cfgDelayMax').value = s.delay_max;
+      document.getElementById('cfgBreakCount').value = s.break_count;
+      document.getElementById('cfgBreakMin').value = s.break_min;
+      document.getElementById('cfgBreakMax').value = s.break_max;
+      document.getElementById('cfgFbEmail').value = s.fb_email || '';
+      document.getElementById('cfgFbPassword').value = s.fb_password || '';
+
+      document.getElementById('cfgMutateImage').checked = s.mutate_image_hash;
+      document.getElementById('cfgRandomEngagement').checked = s.random_group_engagement;
+      document.getElementById('cfgUseSpintax').checked = s.use_spintax;
+      document.getElementById('cfgInjectZeroWidth').checked = s.inject_zero_width;
+      document.getElementById('cfgAppendSignature').checked = s.append_random_signature;
+      document.getElementById('cfgSimulateTypo').checked = s.simulate_typo_and_fix;
+    }
+
+    async function saveSettings() {
+      const payload = {
+        max_posts_per_run: document.getElementById('cfgMaxPosts').value,
+        repost_cooldown_hours: document.getElementById('cfgCooldown').value,
+        delay_min: document.getElementById('cfgDelayMin').value,
+        delay_max: document.getElementById('cfgDelayMax').value,
+        break_count: document.getElementById('cfgBreakCount').value,
+        break_min: document.getElementById('cfgBreakMin').value,
+        break_max: document.getElementById('cfgBreakMax').value,
+        fb_email: document.getElementById('cfgFbEmail').value,
+        fb_password: document.getElementById('cfgFbPassword').value,
+        mutate_image_hash: document.getElementById('cfgMutateImage').checked,
+        random_group_engagement: document.getElementById('cfgRandomEngagement').checked,
+        use_spintax: document.getElementById('cfgUseSpintax').checked,
+        inject_zero_width: document.getElementById('cfgInjectZeroWidth').checked,
+        append_random_signature: document.getElementById('cfgAppendSignature').checked,
+        simulate_typo_and_fix: document.getElementById('cfgSimulateTypo').checked
+      };
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showToast(data.message);
+    }
+
+    async function startCampaign() {
+      const res = await fetch('/api/campaign/start', { method: 'POST' });
+      const data = await res.json();
+      showToast(data.message, !data.ok);
+      switchTab('tab-dashboard');
+      fetchState();
+    }
+
+    async function stopCampaign() {
+      const res = await fetch('/api/campaign/stop', { method: 'POST' });
+      const data = await res.json();
+      showToast(data.message, !data.ok);
+      fetchState();
+    }
+
+    async function openChromeBrowser() {
+      const res = await fetch('/api/browser/open', { method: 'POST' });
+      const data = await res.json();
+      showToast(data.message);
+    }
+
+    async function clearHistory() {
+      if (!confirm('Bạn có chắc muốn xóa lịch sử chống trùng để đăng lại từ đầu?')) return;
+      const res = await fetch('/api/history/clear', { method: 'POST' });
+      const data = await res.json();
+      showToast(data.message);
+      fetchState();
+    }
+
+    // Initial load
+    fetchState();
+    loadPostAndImages();
+    loadGroupsList();
+    loadSettingsForm();
+    setInterval(fetchState, 1500);
+  </script>
+</body>
+</html>
