@@ -55,8 +55,10 @@ class DriverManager:
 
         print(f"🔗 ĐANG KẾT NỐI VÀO CỬA SỔ CHROME TRÊN MÀN HÌNH CỦA BẠN...")
         options = Options()
+        options.page_load_strategy = 'eager'  # Tải nhanh DOM, không bị kẹt chờ các video/quảng cáo nặng trên FB
         options.add_experimental_option("debuggerAddress", f"127.0.0.1:{self.debug_port}")
         driver = webdriver.Chrome(options=options)
+        driver.set_page_load_timeout(35)  # Tránh treo vô tận nếu Facebook tải trang chậm
         print("✅ ĐÃ KẾT NỐI THÀNH CÔNG VÀO TAB CHROME CỦA BẠN!")
         return driver
 

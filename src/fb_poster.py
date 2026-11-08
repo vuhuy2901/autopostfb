@@ -28,21 +28,40 @@ class FBGroupPoster:
 
     def is_logged_in(self) -> bool:
         """Kiểm tra chuẩn xác xem tài khoản đã đăng nhập Facebook chưa"""
-        self.driver.get("https://www.facebook.com/")
-        time.sleep(3)
+        try:
+            current_url = self.driver.current_url.lower()
+        except Exception:
+            current_url = ""
+
+        # Chỉ tải lại trang chủ Facebook nếu hiện tại chưa ở trên facebook.com
+        if "facebook.com" not in current_url:
+            try:
+                self.driver.get("https://www.facebook.com/")
+                time.sleep(2.5)
+            except Exception:
+                try:
+                    self.driver.execute_script("window.stop();")
+                except Exception:
+                    pass
 
         # 1. Nếu có ô nhập email hoặc mật khẩu -> Chắc chắn CHƯA đăng nhập
-        login_inputs = self.driver.find_elements(By.XPATH, "//input[@name='email' or @name='pass']")
-        if login_inputs and any(inp.is_displayed() for inp in login_inputs):
-            return False
+        try:
+            login_inputs = self.driver.find_elements(By.XPATH, "//input[@name='email' or @name='pass']")
+            if login_inputs and any(inp.is_displayed() for inp in login_inputs):
+                return False
+        except Exception:
+            login_inputs = []
 
         # 2. Nếu có nút "Đăng nhập" / "Log in" lớn của trang chủ -> CHƯA đăng nhập
-        login_buttons = self.driver.find_elements(
-            By.XPATH,
-            "//button[@name='login'] | //button[contains(text(), 'Đăng nhập') or contains(text(), 'Log in')]"
-        )
-        if login_buttons and any(b.is_displayed() for b in login_buttons):
-            return False
+        try:
+            login_buttons = self.driver.find_elements(
+                By.XPATH,
+                "//button[@name='login'] | //button[contains(text(), 'Đăng nhập') or contains(text(), 'Log in')]"
+            )
+            if login_buttons and any(b.is_displayed() for b in login_buttons):
+                return False
+        except Exception:
+            pass
 
         # 3. Kiểm tra xem có thanh điều hướng hoặc avatar của người dùng hay không
         try:
@@ -55,9 +74,12 @@ class FBGroupPoster:
         except Exception:
             pass
 
-        current_url = self.driver.current_url.lower()
-        if "login" in current_url or "checkpoint" in current_url:
-            return False
+        try:
+            current_url = self.driver.current_url.lower()
+            if "login" in current_url or "checkpoint" in current_url:
+                return False
+        except Exception:
+            pass
 
         # Nếu không có ô login thì coi như đã đăng nhập
         return len(login_inputs) == 0
@@ -173,7 +195,13 @@ class FBGroupPoster:
         if not group_url.startswith("http"):
             group_url = "https://" + group_url.lstrip('/')
         print(f"\n🌐 Đang mở nhóm: {group_url}")
-        driver.get(group_url)
+        try:
+            driver.get(group_url)
+        except TimeoutException:
+            try:
+                driver.execute_script("window.stop();")
+            except Exception:
+                pass
         Humanizer.sleep_random(3.0, 5.0, "Tải trang nhóm")
 
         # 1. Kiểm tra an toàn trước

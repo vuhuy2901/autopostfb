@@ -198,24 +198,34 @@ def campaign_worker():
 
             add_live_log(f"📌 [{idx}/{len(target_groups)}] Đang mở nhóm: {group_url}", "info")
 
-            post_content = SpintaxEngine.process_content(
-                raw_content,
-                use_spintax=anti_cfg.get("use_spintax", False),
-                append_signature=anti_cfg.get("append_random_signature", False),
-                inject_zero_width=anti_cfg.get("inject_zero_width", False)
-            )
-            images_to_upload = mutator.prepare_images(
-                raw_images,
-                mutate=anti_cfg.get("mutate_image_hash", True)
-            )
+            try:
+                post_content = SpintaxEngine.process_content(
+                    raw_content,
+                    use_spintax=anti_cfg.get("use_spintax", False),
+                    append_signature=anti_cfg.get("append_random_signature", False),
+                    inject_zero_width=anti_cfg.get("inject_zero_width", False)
+                )
+                images_to_upload = mutator.prepare_images(
+                    raw_images,
+                    mutate=anti_cfg.get("mutate_image_hash", True)
+                )
 
-            success, msg = poster.post_to_group(
-                group_url,
-                post_content,
-                images_to_upload,
-                simulate_typo=anti_cfg.get("simulate_typo_and_fix", False),
-                random_engagement=anti_cfg.get("random_group_engagement", True)
-            )
+                success, msg = poster.post_to_group(
+                    group_url,
+                    post_content,
+                    images_to_upload,
+                    simulate_typo=anti_cfg.get("simulate_typo_and_fix", False),
+                    random_engagement=anti_cfg.get("random_group_engagement", True)
+                )
+            except Exception as grp_err:
+                success = False
+                msg = f"Lỗi tải nhóm hoặc kết nối: {grp_err}"
+                # Nếu kết nối driver bị ngắt, thử kết nối lại
+                try:
+                    driver = mgr.get_driver()
+                    poster = FBGroupPoster(driver)
+                except Exception:
+                    pass
 
             status_str = "success" if success else "failed"
             history.record_post(group_url, str(post_folder), status_str, msg, account_name="my_account")
