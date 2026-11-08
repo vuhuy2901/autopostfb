@@ -13,12 +13,15 @@ class DriverManager:
     - Nếu Chrome đã mở sẵn: Gắn thẳng vào cửa sổ Chrome đang mở của bạn!
     """
 
-    CHROME_EXE = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    CHROME_EXE = os.environ.get(
+        "CHROME_BIN",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe" if os.name == "nt" else "/usr/bin/google-chrome"
+    )
 
     def __init__(self, profile_dir: str = "chrome_profile", headless: bool = False, debug_port: int = 9222):
         self.profile_path = Path(profile_dir).resolve()
         self.profile_path.mkdir(parents=True, exist_ok=True)
-        self.headless = headless
+        self.headless = headless or (os.environ.get("HEADLESS", "false").lower() == "true")
         self.debug_port = debug_port
         self.is_attached = True
 
@@ -41,8 +44,12 @@ class DriverManager:
                 f"--user-data-dir={self.profile_path}",
                 "--no-first-run",
                 "--no-default-browser-check",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
                 "https://www.facebook.com"
             ]
+            if self.headless:
+                cmd.extend(["--headless=new", "--disable-gpu"])
             subprocess.Popen(cmd)
             # Chờ Chrome khởi động và mở cổng
             for _ in range(15):

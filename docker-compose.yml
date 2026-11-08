@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  autopostfb:
+    build: .
+    container_name: autopostfb_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    shm_size: '2gb'
+    environment:
+      - DISPLAY=:99
+      - HEADLESS=false
+    volumes:
+      # Ánh xạ toàn bộ thư mục dữ liệu để lưu trữ vĩnh viễn trên máy chủ/ổ đĩa
+      - ./chrome_profile:/app/chrome_profile
+      - ./config:/app/config
+      - ./posts:/app/posts
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./.env:/app/.env
