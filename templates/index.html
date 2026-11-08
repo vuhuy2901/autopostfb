@@ -205,17 +205,116 @@
 
     <!-- TAB 3: GROUPS MANAGER -->
     <section id="tab-groups" class="hidden space-y-6">
+      <!-- Selection Toolbar Card -->
       <div class="glass-card rounded-2xl p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div>
-            <h2 class="text-sm font-bold text-white">👥 Danh Sách Đường Dẫn Nhóm Facebook (config/groups.txt)</h2>
-            <p class="text-xs text-slate-400 mt-0.5">Mỗi dòng 1 đường link nhóm Facebook. Hệ thống sẽ tự động xáo trộn ngẫu nhiên và lọc bỏ nhóm đã đăng trong 20 giờ qua.</p>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>🎯</span> Chọn Nhóm Cần Đăng & Quản Lý Danh Sách Nhóm
+              <span id="selectedCountBadge" class="px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                Đang chọn: 0 / 0 nhóm
+              </span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Tích chọn từng nhóm, bấm Chọn tất cả, hoặc nhập số lượng (VD: 50) để tự động chọn 50 nhóm đầu tiên.
+            </p>
           </div>
-          <button onclick="saveGroupsList()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/25 transition">
-            💾 Lưu Danh Sách Nhóm
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleRawGroupEditor()" id="btnToggleRawEditor" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
+              📝 Sửa / Thêm Link Nhóm (Text)
+            </button>
+            <button onclick="startCampaign()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/25 transition">
+              🚀 Chạy Ngay Các Nhóm Đã Chọn
+            </button>
+          </div>
         </div>
-        <textarea id="groupsTextarea" rows="16" class="w-full rounded-xl bg-slate-950/90 border border-slate-800 focus:border-blue-500 focus:outline-none p-4 font-mono text-xs text-slate-200 leading-relaxed custom-scroll" placeholder="https://www.facebook.com/groups/..."></textarea>
+
+        <!-- Quick Selection Controls -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-slate-950/70 p-4 rounded-xl border border-slate-800/90">
+          <!-- Buttons: Select All / None / Unposted -->
+          <div class="lg:col-span-5 flex flex-wrap items-center gap-2">
+            <button onclick="selectAllGroups(true)" class="px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-xs font-semibold transition">
+              ☑️ Chọn tất cả
+            </button>
+            <button onclick="selectAllGroups(false)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition">
+              ⬜ Bỏ chọn tất cả
+            </button>
+            <button onclick="selectUnpostedGroups()" class="px-3 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition">
+              ✨ Chọn nhóm chưa đăng
+            </button>
+          </div>
+
+          <!-- Input: Select First N Groups (e.g. 50) -->
+          <div class="lg:col-span-4 flex items-center gap-2">
+            <label class="text-xs text-slate-300 font-medium whitespace-nowrap">Nhập số lượng:</label>
+            <input
+              type="number"
+              id="selectFirstNInput"
+              min="1"
+              placeholder="VD: 50"
+              oninput="selectFirstNGroups(this.value)"
+              class="w-24 rounded-xl bg-slate-900 border border-blue-500/40 focus:border-blue-400 focus:outline-none px-3 py-1.5 text-sm font-bold text-white text-center"
+            />
+            <button onclick="selectFirstNGroups(document.getElementById('selectFirstNInput').value || 50)" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition whitespace-nowrap">
+              Chọn N nhóm đầu
+            </button>
+          </div>
+
+          <!-- Quick preset pills: 20, 30, 50, 100 -->
+          <div class="lg:col-span-3 flex flex-wrap items-center justify-end gap-1.5">
+            <span class="text-[11px] text-slate-400 mr-1">Chọn nhanh:</span>
+            <button onclick="setAndSelectFirstN(20)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white text-xs font-semibold transition">20 đầu</button>
+            <button onclick="setAndSelectFirstN(30)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white text-xs font-semibold transition">30 đầu</button>
+            <button onclick="setAndSelectFirstN(50)" class="px-2.5 py-1 rounded-lg bg-blue-600/30 border border-blue-500/40 hover:bg-blue-600 text-blue-200 hover:text-white text-xs font-bold transition">50 đầu</button>
+            <button onclick="setAndSelectFirstN(100)" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white text-xs font-semibold transition">100 đầu</button>
+          </div>
+        </div>
+
+        <!-- Secondary bar: Range selection + Search + Shuffle option -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-1">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-slate-400">Chọn theo khoảng từ STT:</span>
+            <input type="number" id="rangeStartInput" min="1" placeholder="1" class="w-16 rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1 text-white text-center" />
+            <span class="text-slate-400">đến</span>
+            <input type="number" id="rangeEndInput" min="1" placeholder="50" class="w-16 rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1 text-white text-center" />
+            <button onclick="selectRangeGroups()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+              Áp dụng khoảng
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4">
+            <input
+              type="text"
+              id="groupSearchInput"
+              oninput="renderGroupsChecklist()"
+              placeholder="🔍 Tìm kiếm link hoặc ID nhóm..."
+              class="w-56 rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
+            />
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="chkShuffleSelected" class="w-4 h-4 rounded accent-blue-600" />
+              <span>🔀 Xáo trộn ngẫu nhiên các nhóm đã chọn</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Interactive Checklist Grid -->
+        <div id="groupsChecklistContainer" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[420px] overflow-y-auto custom-scroll pr-1 pt-2">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Raw Textarea Editor (Collapsible) -->
+        <div id="rawGroupEditorBox" class="hidden pt-4 border-t border-slate-800 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-amber-400">📝 Chỉnh Sửa Nhanh Toàn Bộ Danh Sách Link (config/groups.txt)</h3>
+              <p class="text-[11px] text-slate-400">Mỗi dòng 1 đường link nhóm Facebook. Bấm Lưu để cập nhật lại danh sách chọn bên trên.</p>
+            </div>
+            <button onclick="saveGroupsList()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/25 transition">
+              💾 Lưu Danh Sách Nhóm
+            </button>
+          </div>
+          <textarea id="groupsTextarea" rows="12" class="w-full rounded-xl bg-slate-950/90 border border-slate-800 focus:border-blue-500 focus:outline-none p-4 font-mono text-xs text-slate-200 leading-relaxed custom-scroll" placeholder="https://www.facebook.com/groups/..."></textarea>
+        </div>
       </div>
     </section>
 
@@ -474,10 +573,183 @@
       loadPostAndImages();
     }
 
+    // State lưu danh sách nhóm và các nhóm đang được tích chọn
+    let allGroupsDetail = [];
+    let selectedGroupUrls = new Set();
+    let isInitializedSelection = false;
+
     async function loadGroupsList() {
       const res = await fetch('/api/groups');
       const data = await res.json();
       document.getElementById('groupsTextarea').value = data.groups_text || '';
+      allGroupsDetail = data.groups_detail || [];
+
+      // Mặc định lần đầu mở trang: tích chọn tất cả các nhóm
+      if (!isInitializedSelection && allGroupsDetail.length > 0) {
+        allGroupsDetail.forEach(g => selectedGroupUrls.add(g.url));
+        isInitializedSelection = true;
+      } else {
+        // Giữ lại các nhóm đã chọn mà vẫn còn trong danh sách
+        const validSet = new Set(allGroupsDetail.map(g => g.url));
+        selectedGroupUrls = new Set([...selectedGroupUrls].filter(u => validSet.has(u)));
+      }
+
+      renderGroupsChecklist();
+      updateSelectedBadge();
+    }
+
+    function renderGroupsChecklist() {
+      const container = document.getElementById('groupsChecklistContainer');
+      const keyword = (document.getElementById('groupSearchInput')?.value || '').trim().toLowerCase();
+
+      if (!allGroupsDetail.length) {
+        container.innerHTML = `<div class="col-span-2 text-center py-10 text-xs text-slate-500">Chưa có nhóm nào trong danh sách.</div>`;
+        return;
+      }
+
+      const filtered = allGroupsDetail.filter(g =>
+        !keyword || g.url.toLowerCase().includes(keyword) || String(g.index).includes(keyword)
+      );
+
+      if (!filtered.length) {
+        container.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-slate-500">Không tìm thấy nhóm khớp từ khóa "${keyword}".</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(g => {
+        const checked = selectedGroupUrls.has(g.url);
+        const safeUrl = g.url.replace(/'/g, "\\'");
+        return `
+          <div
+            onclick="toggleGroupSelection('${safeUrl}')"
+            class="cursor-pointer p-3 rounded-xl border transition flex items-center justify-between gap-3 ${
+              checked
+                ? 'bg-blue-950/35 border-blue-500/40 hover:border-blue-400'
+                : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700 opacity-75'
+            }"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <input
+                type="checkbox"
+                ${checked ? 'checked' : ''}
+                onclick="event.stopPropagation(); toggleGroupSelection('${safeUrl}')"
+                class="w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0"
+              />
+              <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono text-[11px] font-bold shrink-0">
+                #${g.index}
+              </span>
+              <a
+                href="${g.url}"
+                target="_blank"
+                onclick="event.stopPropagation()"
+                class="text-xs text-slate-200 hover:text-blue-400 hover:underline truncate"
+                title="${g.url}"
+              >
+                ${g.url}
+              </a>
+            </div>
+            <div class="shrink-0">
+              ${
+                g.recently_posted
+                  ? `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Đã đăng lúc ${g.last_time}">Đã đăng</span>`
+                  : `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Sẵn sàng</span>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleGroupSelection(url) {
+      if (selectedGroupUrls.has(url)) {
+        selectedGroupUrls.delete(url);
+      } else {
+        selectedGroupUrls.add(url);
+      }
+      renderGroupsChecklist();
+      updateSelectedBadge();
+    }
+
+    function selectAllGroups(selectAll) {
+      if (selectAll) {
+        allGroupsDetail.forEach(g => selectedGroupUrls.add(g.url));
+        document.getElementById('selectFirstNInput').value = allGroupsDetail.length;
+        showToast(`☑️ Đã chọn tất cả ${allGroupsDetail.length} nhóm!`);
+      } else {
+        selectedGroupUrls.clear();
+        document.getElementById('selectFirstNInput').value = '';
+        showToast(`⬜ Đã bỏ chọn tất cả nhóm!`);
+      }
+      renderGroupsChecklist();
+      updateSelectedBadge();
+    }
+
+    function selectUnpostedGroups() {
+      selectedGroupUrls.clear();
+      allGroupsDetail.forEach(g => {
+        if (!g.recently_posted) selectedGroupUrls.add(g.url);
+      });
+      renderGroupsChecklist();
+      updateSelectedBadge();
+      showToast(`✨ Đã chọn ${selectedGroupUrls.size} nhóm chưa đăng gần đây!`);
+    }
+
+    function setAndSelectFirstN(n) {
+      document.getElementById('selectFirstNInput').value = n;
+      selectFirstNGroups(n, true);
+    }
+
+    function selectFirstNGroups(val, showMsg = false) {
+      const count = parseInt(val, 10);
+      if (isNaN(count) || count <= 0) {
+        return;
+      }
+      selectedGroupUrls.clear();
+      const limit = Math.min(count, allGroupsDetail.length);
+      for (let i = 0; i < limit; i++) {
+        selectedGroupUrls.add(allGroupsDetail[i].url);
+      }
+      renderGroupsChecklist();
+      updateSelectedBadge();
+      if (showMsg) {
+        showToast(`🎯 Đã chọn ${limit} nhóm đầu tiên (từ #1 đến #${limit})!`);
+      }
+    }
+
+    function selectRangeGroups() {
+      const start = parseInt(document.getElementById('rangeStartInput').value, 10) || 1;
+      const end = parseInt(document.getElementById('rangeEndInput').value, 10) || allGroupsDetail.length;
+      if (start < 1 || end < start) {
+        showToast('Khoảng số thứ tự không hợp lệ!', true);
+        return;
+      }
+      selectedGroupUrls.clear();
+      allGroupsDetail.forEach(g => {
+        if (g.index >= start && g.index <= end) {
+          selectedGroupUrls.add(g.url);
+        }
+      });
+      renderGroupsChecklist();
+      updateSelectedBadge();
+      showToast(`🎯 Đã chọn ${selectedGroupUrls.size} nhóm (từ #${start} đến #${Math.min(end, allGroupsDetail.length)})!`);
+    }
+
+    function updateSelectedBadge() {
+      const total = allGroupsDetail.length;
+      const sel = selectedGroupUrls.size;
+      const badge = document.getElementById('selectedCountBadge');
+      if (badge) {
+        badge.textContent = `Đang chọn: ${sel} / ${total} nhóm`;
+      }
+      const btnStart = document.getElementById('btnStart');
+      if (btnStart) {
+        btnStart.innerHTML = `<span>🚀</span> BẮT ĐẦU CHẠY AUTO (${sel} nhóm)`;
+      }
+    }
+
+    function toggleRawGroupEditor() {
+      const box = document.getElementById('rawGroupEditorBox');
+      box.classList.toggle('hidden');
     }
 
     async function saveGroupsList() {
@@ -489,6 +761,8 @@
       });
       const data = await res.json();
       showToast(data.message);
+      isInitializedSelection = false;
+      await loadGroupsList();
       fetchState();
     }
 
@@ -541,7 +815,25 @@
     }
 
     async function startCampaign() {
-      const res = await fetch('/api/campaign/start', { method: 'POST' });
+      const orderedSelected = allGroupsDetail
+        .filter(g => selectedGroupUrls.has(g.url))
+        .map(g => g.url);
+
+      if (orderedSelected.length === 0) {
+        showToast('⚠️ Bạn chưa chọn nhóm nào! Hãy tích chọn nhóm trước khi chạy.', true);
+        switchTab('tab-groups');
+        return;
+      }
+
+      const shuffle = document.getElementById('chkShuffleSelected')?.checked || false;
+      const res = await fetch('/api/campaign/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selected_groups: orderedSelected,
+          shuffle_groups: shuffle
+        })
+      });
       const data = await res.json();
       showToast(data.message, !data.ok);
       switchTab('tab-dashboard');
@@ -566,6 +858,7 @@
       const res = await fetch('/api/history/clear', { method: 'POST' });
       const data = await res.json();
       showToast(data.message);
+      loadGroupsList();
       fetchState();
     }
 

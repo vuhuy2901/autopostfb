@@ -103,7 +103,7 @@ def sleep_interruptible(seconds: int, prefix_text: str):
     return True
 
 
-def campaign_worker():
+def campaign_worker(selected_groups: list[str] = None, shuffle_groups: bool = False):
     with state_lock:
         campaign_state["is_running"] = True
         campaign_state["stop_requested"] = False
@@ -116,9 +116,17 @@ def campaign_worker():
 
     try:
         settings = load_settings()
-        groups = load_groups()
+        all_groups = load_groups()
+        if selected_groups and len(selected_groups) > 0:
+            groups = [g.strip().lstrip("\ufeff\u200b") for g in selected_groups if g.strip()]
+            custom_selection = True
+            add_live_log(f"🎯 Chế độ chạy theo danh sách nhóm đã chọn ({len(groups)} nhóm).", "info")
+        else:
+            groups = all_groups
+            custom_selection = False
+
         if not groups:
-            add_live_log("❌ Danh sách nhóm đang trống! Hãy thêm nhóm trước.", "error")
+            add_live_log("❌ Danh sách nhóm đang trống! Hãy thêm hoặc tích chọn nhóm trước.", "error")
             return
 
         post_folder = get_post_folder()
@@ -146,11 +154,17 @@ def campaign_worker():
                 eligible_groups.append(g)
 
         if not eligible_groups:
-            add_live_log(f"✅ Tất cả các nhóm đều đã được đăng trong {cooldown} giờ qua!", "success")
+            add_live_log(f"✅ Tất cả các nhóm được chọn đều đã đăng trong {cooldown} giờ qua! (Bấm 'Xóa lịch sử trùng' nếu muốn đăng đè).", "success")
             return
 
-        random.shuffle(eligible_groups)
-        target_groups = eligible_groups[:max_limit]
+        if shuffle_groups:
+            random.shuffle(eligible_groups)
+
+        # Nếu người dùng đã chủ động tích chọn số lượng nhóm (VD: 50 nhóm đầu), chạy hết số nhóm đã chọn
+        if custom_selection:
+            target_groups = eligible_groups
+        else:
+            target_groups = eligible_groups[:max_limit]
 
         with state_lock:
             campaign_state["total_targets"] = len(target_groups)
@@ -382,7 +396,24 @@ def api_groups():
         return jsonify({"ok": True, "count": len(lines), "message": f"Đã lưu {len(lines)} nhóm thành công!"})
 
     groups = load_groups()
-    return jsonify({"groups": groups, "groups_text": "\n".join(groups), "count": len(groups)})
+    settings = load_settings()
+    cooldown = settings.get("repost_cooldown_hours", 20)
+    history = HistoryManager()
+    groups_detail = []
+    for idx, g in enumerate(groups, 1):
+        recently, last_time = history.is_recently_posted(g, cooldown)
+        groups_detail.append({
+            "index": idx,
+            "url": g,
+            "recently_posted": recently,
+            "last_time": last_time[:16].replace("T", " ") if last_time else ""
+        })
+    return jsonify({
+        "groups": groups,
+        "groups_detail": groups_detail,
+        "groups_text": "\n".join(groups),
+        "count": len(groups)
+    })
 
 
 @app.route("/api/settings", methods=["GET", "POST"])
@@ -455,9 +486,18 @@ def api_start_campaign():
         if campaign_state["is_running"]:
             return jsonify({"ok": False, "message": "Chiến dịch đang chạy rồi!"}), 400
 
-    t = threading.Thread(target=campaign_worker, daemon=True)
+    data = request.get_json(silent=True) or {}
+    selected_groups = data.get("selected_groups", None)
+    shuffle_groups = bool(data.get("shuffle_groups", False))
+
+    t = threading.Thread(
+        target=campaign_worker,
+        kwargs={"selected_groups": selected_groups, "shuffle_groups": shuffle_groups},
+        daemon=True
+    )
     t.start()
-    return jsonify({"ok": True, "message": "Đã bắt đầu chạy chiến dịch tự động đăng bài!"})
+    count_msg = f" ({len(selected_groups)} nhóm đã chọn)" if selected_groups else ""
+    return jsonify({"ok": True, "message": f"Đã bắt đầu chạy chiến dịch tự động đăng bài{count_msg}!"})
 
 
 @app.route("/api/campaign/stop", methods=["POST"])
